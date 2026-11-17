@@ -16,32 +16,67 @@ $ eval "$(plextool completion zsh)"
 
 ## Setting it up
 
-There are two ways to load it for bash. The first is to add this line to `~/.bashrc` and open a new shell:
+`plextool completion bash` only prints the script. Nothing is saved until the output is put somewhere the shell reads
+when it starts. To try it in the current shell first, without saving anything:
 
 ```console
-eval "$(plextool completion bash)"
+$ eval "$(plextool completion bash)"
 ```
 
-That runs plextool at the start of every shell, which took about 0.2 seconds when measured on a development machine.
-The second avoids that cost: save the script once, in the place the `bash-completion` package reads completions from
-(if that package is installed), or anywhere that `~/.bashrc` then `source`s:
+Typing `plextool to` and pressing Tab then gives `token`. Closing the shell forgets it.
 
-```console
-$ plextool completion bash > ~/.local/share/bash-completion/completions/plextool
-```
+### Keeping it for bash
 
-For zsh, add `eval "$(plextool completion zsh)"` to `~/.zshrc`, or save the output to a file and `source` it. The zsh
-script loads zsh's `bashcompinit` support first and uses the same logic as the bash one.
+There are three ways, from cheapest to simplest.
+
+1. A completions folder. This costs nothing at start-up, but it only works if the `bash-completion` package is
+   installed, since that package is what reads the folder. If Tab does nothing after this, install the package or use
+   one of the other two.
+
+   ```console
+   $ mkdir -p ~/.local/share/bash-completion/completions
+   $ plextool completion bash > ~/.local/share/bash-completion/completions/plextool
+   ```
+
+2. A saved file that `~/.bashrc` loads:
+
+   ```console
+   $ mkdir -p ~/.config/plextool
+   $ plextool completion bash > ~/.config/plextool/completion.bash
+   $ echo 'source ~/.config/plextool/completion.bash' >> ~/.bashrc
+   ```
+
+3. An `eval` line in `~/.bashrc`:
+
+   ```console
+   $ echo 'eval "$(plextool completion bash)"' >> ~/.bashrc
+   ```
+
+   This runs plextool at the start of every shell, which took about 0.2 seconds when measured on a development
+   machine.
+
+Open a new shell afterwards. Bash reads `~/.bashrc` for interactive shells that are not login shells. A login shell
+(an SSH session, or `su -`) reads `~/.bash_profile` or `~/.profile` first, and many systems make that file load
+`~/.bashrc`. If completion works in a new terminal window but not after logging in, add
+`[ -f ~/.bashrc ] && . ~/.bashrc` to `~/.bash_profile`. A service account may have neither file, in which case
+creating `~/.bashrc` as above is enough for non-login shells.
+
+### Keeping it for zsh
+
+Add `eval "$(plextool completion zsh)"` to `~/.zshrc`, or save the output to a file and `source` it from there. The
+zsh script loads zsh's `bashcompinit` support first and uses the same logic as the bash one.
+
+### After an upgrade
 
 A saved script lists the commands as they were when it was saved, so it has to be saved again after plextool is
-upgraded and gains a command. The `eval` form always reads the current commands.
+upgraded and gains a command (options 1 and 2 above). The `eval` form always reads the current commands.
 
 ## What it completes
 
 | After typing | Tab offers |
 | --- | --- |
 | `plextool ` | The commands. |
-| `plextool token ` | The subcommands (`new`, `list`, `revoke`). |
+| `plextool token ` | The subcommands (`new`, `list`, `claim`, `revoke`). |
 | `plextool token new --` | The options of that subcommand. |
 | `plextool auth login --type ` | The fixed choices for the option (`jwt`, `token`). |
 | `plextool token new --file ` | File names, from the shell. |

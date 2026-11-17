@@ -13,7 +13,7 @@ from plexapi.exceptions import BadRequest, NotFound, Unauthorized
 from plexapi.server import PlexServer
 from requests.exceptions import RequestException
 
-from . import auth
+from . import auth, claim
 from .common import (
     DEFAULT_TIMEOUT,
     URL_ENV,
@@ -383,11 +383,13 @@ def add_parser(subparsers) -> None:
         "full-access token that shows in Plex under Authorized Devices (a browser sign-in), --ro is "
         "the token of a shared user, which sees only what is shared with that user. Plex has no "
         "read-only token, and the output says what a token can do. 'list' shows the apps authorised on the "
-        "account, the tokens made, whether they are still active, and who has access to the server. 'revoke' removes one. "
+        "account, the tokens made, whether they are still active, and who has access to the server. 'claim' prints a "
+        "claim token for setting up a new server in Docker. 'revoke' removes one. "
         "Nothing is removed without --commit.",
         ['plextool token new --rw --name mcp-server --file ~/.plex-mcp.env',
          'plextool token new --ro --user alice --file ~/.plex-reader.env',
          'plextool token list',
+         'plextool token claim --format compose',
          'plextool token revoke mcp-server --delete-file --commit'])
     sub = parser.add_subparsers(dest="action", metavar="action", required=True)
 
@@ -429,6 +431,8 @@ def add_parser(subparsers) -> None:
     lst.add_argument("--no-users", action="store_true",
                      help="skip the users list (it needs a connection to the server)")
 
+    claim.add_action(sub)
+
     rev = add_command(
         sub, 'revoke', 'remove a token made with token new --rw',
         "Remove the Authorized Devices entry of a --rw token, by the name it was made with or the start "
@@ -448,4 +452,5 @@ def add_parser(subparsers) -> None:
 
 
 def run(args: argparse.Namespace) -> int:
-    return {"new": run_new, "list": run_list, "revoke": run_revoke}[args.action](args)
+    return {"new": run_new, "list": run_list, "claim": claim.run_claim,
+            "revoke": run_revoke}[args.action](args)

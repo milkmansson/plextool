@@ -31,7 +31,8 @@ plextool is a CLI toolkit for looking after a Plex Media Server: fixing things P
   to the Plex account and removes the old ones by ID, age, app or name. It never removes a Plex Media Server.
 - **Give another tool its own token.** [`plextool token`](https://plextool.readthedocs.io/en/latest/commands/token.html) makes, lists and revokes tokens for a program such as a Plex MCP
   server, so it does not need the saved login. Whether it is full access (`--rw`) or a shared user's (`--ro`)
-  has to be stated, and the output says what the token can do.
+  has to be stated, and the output says what the token can do. `plextool token claim` prints the claim token
+  (`PLEX_CLAIM`) for a new Plex server set up in Docker or Docker Compose.
 - **Find and remove duplicate movies and episodes.** [`plextool dupes`](https://plextool.readthedocs.io/en/latest/commands/dupes.html)
   lists every item Plex holds more than one file for, and can delete the extras that are not wanted.
 - **Free up disk space.** [`plextool stale`](https://plextool.readthedocs.io/en/latest/commands/stale.html) finds large, never-watched or
@@ -71,7 +72,7 @@ plextool uses Plex's API and never edits the Plex database file. It signs in thr
 | [`plextool sessions`](https://plextool.readthedocs.io/en/latest/commands/sessions.html) | List what is playing and stop streams. |
 | [`plextool labels`](https://plextool.readthedocs.io/en/latest/commands/labels.html) | Add, remove and count labels in bulk. |
 | [`plextool devices`](https://plextool.readthedocs.io/en/latest/commands/devices.html) | List the apps and devices authorised on the Plex account, and sign out the ones no longer wanted, by ID or by age, app or name. Plex Media Servers are never removed. |
-| [`plextool token`](https://plextool.readthedocs.io/en/latest/commands/token.html) | Make, list and revoke tokens for other tools (such as an MCP server) without sharing the saved login: a separate full-access token that can be revoked on its own, or a shared user's token. Also shows who has access to the server. |
+| [`plextool token`](https://plextool.readthedocs.io/en/latest/commands/token.html) | Make, list and revoke tokens for other tools (such as an MCP server) without sharing the saved login: a separate full-access token that can be revoked on its own, or a shared user's token. Also prints the claim token for a new Docker server, and shows who has access to the server. |
 | [`plextool server`](https://plextool.readthedocs.io/en/latest/commands/server.html) | Find servers on the account or network and choose the one to use. Covers working offline or directly against the server. |
 | [`plextool status`](https://plextool.readthedocs.io/en/latest/commands/status.html) | Server version, library sizes, who is watching what. |
 | [`plextool info`](https://plextool.readthedocs.io/en/latest/commands/info.html) | Everything Plex holds about one item: people, tags, playback, and every file, path, video, audio and subtitle track. Several items can be compared side by side. |

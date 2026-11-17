@@ -5,6 +5,7 @@ programs do not have to share the saved login. It also lists what was made and r
 
 - `token new` makes a token.
 - `token list` shows the apps authorised on the Plex account, the tokens made, whether each is still active, and who has access to the server.
+- `token claim` prints a claim token, for setting up a new Plex Media Server in Docker.
 - `token revoke` removes one.
 
 Handy when:
@@ -12,11 +13,13 @@ Handy when:
 - A script needs its own token, so it can be cancelled without signing out everywhere else.
 - A tool only needs to see certain libraries, and a shared user's token fits better than full access.
 - It is unclear which tokens exist, or which are still in use, and old ones need cancelling.
+- A new Plex Media Server is being started in Docker or Docker Compose, and needs a claim token to link it to the Plex account.
 
 ```console
 $ plextool token new --rw --name mcp-server --file ~/.plex-mcp.env
 $ plextool token new --ro --user alice --file ~/.plex-reader.env
 $ plextool token list
+$ plextool token claim --format compose
 $ plextool token revoke mcp-server --delete-file --commit
 ```
 
@@ -120,6 +123,83 @@ token made with `plextool token`. It needs a connection to the server. If that f
 
 Plex cannot list the temporary tokens a server makes, or a token copied out of an app, so those never
 appear. A server may also keep accepting a revoked token for a short while.
+
+## token claim
+
+Prints a claim token for starting a new Plex Media Server in Docker. A claim token links a server to a Plex
+account the first time it starts, so the server does not have to be claimed afterwards from a browser on the
+same network. Plex's own article is [Claim your server](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
+and the Docker images read the token from the `PLEX_CLAIM` environment variable.
+
+```console
+$ plextool token claim --format compose
+- PLEX_CLAIM=claim-xxxxxxxxxxxxxxxxxxxx
+```
+
+The token is fetched from plex.tv with the saved login (or any token found the usual way: `--token-file`,
+`$PLEX_TOKEN`, and so on). It needs no browser approval and creates nothing on the account, so there is
+nothing to revoke afterwards. The token itself goes to standard output, and a reminder of its lifetime goes
+to standard error, so the output can be captured or pasted as it is.
+
+### Using it with Docker Compose
+
+This is the setup in the [Raspberry Pi Plex Media Server guide](https://raspberry.tips/en/raspberrypi-tutorials/raspberry-pi-plex-media-server-setup#Option_B_Plex_with_Docker_Compose), Option B.
+
+1. Make the claim token just before it is needed:
+
+   ```console
+   $ plextool token claim --format compose
+   - PLEX_CLAIM=claim-xxxxxxxxxxxxxxxxxxxx
+   ```
+
+2. Paste that line under `environment:` in `docker-compose.yml`, beside the other settings:
+
+   ```yaml
+   services:
+     plex:
+       image: lscr.io/linuxserver/plex:latest
+       environment:
+         - PUID=1000
+         - PGID=1000
+         - VERSION=docker
+         - PLEX_CLAIM=claim-xxxxxxxxxxxxxxxxxxxx
+   ```
+
+3. Start the container within four minutes of making the token:
+
+   ```console
+   $ docker compose up -d
+   ```
+
+The token is only read when the server starts for the first time and has no configuration yet. Once the server
+is claimed, the `PLEX_CLAIM` line can be deleted from the compose file; leaving it in does no harm, but the
+token stops working after four minutes anyway.
+
+To avoid editing the file, the compose file can refer to a variable instead (`- PLEX_CLAIM=${PLEX_CLAIM}`),
+with the token supplied when starting:
+
+```console
+$ PLEX_CLAIM=$(plextool token claim --format token) docker compose up -d
+```
+
+### Choosing the format
+
+| `--format` | Output | Use |
+| --- | --- | --- |
+| `env` (default) | `PLEX_CLAIM=claim-...` | A `.env` file beside `docker-compose.yml`, or the shell. |
+| `compose` | `- PLEX_CLAIM=claim-...` | A line under `environment:` in `docker-compose.yml`. |
+| `docker` | `-e PLEX_CLAIM=claim-...` | `docker run`, for example `docker run -d -e PLEX_CLAIM=claim-... lscr.io/linuxserver/plex`. |
+| `token` | `claim-...` | The bare token, for scripts and `PLEX_CLAIM=$(...)`. |
+
+### Things to know
+
+- A claim token is valid for **4 minutes**. It is a credential for that time, so it should not be committed to
+  version control or shared. Making a fresh one is quick, and each run gives a new token.
+- It only claims a server that has not been claimed yet. It does nothing for a server already linked to an account
+  and cannot be used to move one.
+- The server ends up owned by the account whose token was used to make the claim token.
+- plex.tv rejecting the token (revoked or expired login) is reported with how to sign in again
+  ([`plextool auth login`](auth.md)).
 
 ## token revoke
 

@@ -914,7 +914,7 @@ def test_users_list_invites_and_cancel(monkeypatch, config, capsys):
 def test_completion_walks_every_command_and_option():
     found = completion.walk(build_parser())
     assert {"auth", "token", "users", "completion"} <= set(found[()]["subs"])
-    assert found[("token",)]["subs"] == ["new", "list", "revoke"]
+    assert found[("token",)]["subs"] == ["new", "list", "claim", "revoke"]
     new = found[("token", "new")]
     assert "--rw" in new["opts"] and "--rw" not in new["value_opts"]            # a switch takes no value
     assert "--file" in new["value_opts"] and "--name" in new["value_opts"]
@@ -927,7 +927,7 @@ def test_completion_script_for_each_shell(capsys):
     out = capsys.readouterr().out
     assert "bashcompinit" in out and "complete -o default -F _plextool plextool" in out
     bash = completion.script("bash", build_parser())
-    assert "bashcompinit" not in bash and '"token") echo "new list revoke"' in bash
+    assert "bashcompinit" not in bash and '"token") echo "new list claim revoke"' in bash
 
 
 @pytest.mark.skipif(shutil.which("bash") is None, reason="needs bash")
@@ -945,7 +945,7 @@ try plextool auth login --type ""
 try plextool stale --library Movies --un
 ''')
     done = subprocess.run(["bash", str(driver)], capture_output=True, text=True, check=True)
-    assert done.stdout.splitlines() == ["token", "new list revoke", "--rw --ro", "", "jwt token", "--unwatched"]
+    assert done.stdout.splitlines() == ["token", "new list claim revoke", "--rw --ro", "", "jwt token", "--unwatched"]
 
 
 # --- progress ------------------------------------------------------------
