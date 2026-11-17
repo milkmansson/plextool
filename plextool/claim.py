@@ -5,12 +5,12 @@ from __future__ import annotations
 import argparse
 import sys
 
-import requests
+from plexapi.exceptions import BadRequest, Unauthorized
+from plexapi.myplex import MyPlexAccount
 from requests.exceptions import RequestException
 
 from .common import SIGN_IN_AGAIN, PlexToolError, add_command, add_token_args, paint, resolve_token
 
-CLAIM_URL = "https://plex.tv/api/claim/token.json"
 CLAIM_VARIABLE = "PLEX_CLAIM"
 VALID_MINUTES = 4
 
@@ -26,17 +26,11 @@ FORMATS = {
 def fetch_claim_token(token: str) -> str:
     """Ask plex.tv for a claim token on behalf of the account that owns `token`."""
     try:
-        response = requests.get(CLAIM_URL, headers={"X-Plex-Token": token, "Accept": "application/json",
-                                                    "X-Plex-Product": "plextool"}, timeout=15)
-    except RequestException as e:
+        claim = MyPlexAccount(token=token).claimToken()
+    except Unauthorized:
+        raise PlexToolError(f"plex.tv rejected the token. {SIGN_IN_AGAIN}") from None
+    except (RequestException, BadRequest) as e:
         raise PlexToolError(f"Could not reach plex.tv: {e}") from None
-    if response.status_code in (401, 403):
-        raise PlexToolError(f"plex.tv rejected the token. {SIGN_IN_AGAIN}")
-    try:
-        response.raise_for_status()
-        claim = response.json()["token"]
-    except (RequestException, ValueError, KeyError) as e:
-        raise PlexToolError(f"plex.tv did not return a claim token ({e}).") from None
     if not str(claim).startswith("claim-"):
         raise PlexToolError("plex.tv returned something that is not a claim token.")
     return claim
