@@ -1,17 +1,24 @@
 # plextool
 
-> [!WARNING]
-> Still in development/testing... please raise an issue if one is found!
+> [!INFORMATION]
+> Well tested, but still new... please raise an issue if one is found!
 
 Swiss army knife command line tool for Plex library maintenance. Built on [python-plexapi](https://python-plexapi.readthedocs.io/), which talks to the
-server through its API.  No accesses is made to the Plex database file which is too risky to edit by hand.
+server through its API.  This tool is designed to cover tasks that would otherwise mean editing the Plex database file directly, which is risky to do by hand.
 
 ## What it is useful for
 
 plextool is a CLI toolkit for looking after a Plex Media Server: fixing things Plex's web interface can't, giving CLI methods to things that would otherwise need many clicks through the web interface for, for server maintenance over SSH, and for finding and fixing problems in large libraries.  Typical jobs:
 
-- **Fix the Recently Added order.** This is what it was first built for. Plex has no way to
-  edit the Recently Added lists, so after the database is rebuilt, duplicate
+Swiss army knife command line tool for Plex library maintenance. Built on python-plexapi, it works through the Plex server’s API, so jobs that would otherwise mean editing the Plex database file by hand (which is risky) can be done safely.  Useful for:
+- Fixing things the Plex web interface can’t.
+- Replacing long click-throughs/repetitive tasks in the web interface with one command.
+- Maintaining a server over SSH/Cli/headless.
+- Finding and fixing problems in large libraries.
+
+## Typical jobs
+
+- **Fix the Recently Added order.** Plex has no way to edit the Recently Added lists, so after the database is rebuilt, duplicate
   files are deleted and Plex rescans, or files are reorganised on disk, everything shows up as
   "new" and the real newest content is buried. [`plextool recent`](https://plextool.readthedocs.io/en/latest/commands/recent.html)
   changes the "added at" date of movies, shows, seasons and episodes: set each
@@ -29,8 +36,8 @@ plextool is a CLI toolkit for looking after a Plex Media Server: fixing things P
   files are gone, the way Plex does it, with a guard against an unmounted drive.
 - **Tidy the apps authorised on the account.** [`plextool devices`](https://plextool.readthedocs.io/en/latest/commands/devices.html) lists every app and device signed in
   to the Plex account and removes the old ones by ID, age, app or name. It never removes a Plex Media Server.
-- **Give another tool its own token.** [`plextool token`](https://plextool.readthedocs.io/en/latest/commands/token.html) makes, lists and revokes tokens for a program such as a Plex MCP
-  server, so it does not need the saved login. Whether it is full access (`--rw`) or a shared user's (`--ro`)
+- **Give another tool its own token.** [`plextool token`](https://plextool.readthedocs.io/en/latest/commands/token.html) makes, lists and revokes tokens for a
+  program such as a Plex MCP server, so it does not need the saved login. Whether it is full access (`--rw`) or a shared user's (`--ro`)
   has to be stated, and the output says what the token can do. `plextool token claim` prints the claim token
   (`PLEX_CLAIM`) for a new Plex server set up in Docker or Docker Compose.
 - **Find and remove duplicate movies and episodes.** [`plextool dupes`](https://plextool.readthedocs.io/en/latest/commands/dupes.html)
@@ -57,8 +64,7 @@ plextool is a CLI toolkit for looking after a Plex Media Server: fixing things P
   feeds other tools.
 
 > [!IMPORTANT]
-> Everything that changes the server is a preview until `--commit` is passed. plextool uses Plex's API and
-> never edits the Plex database file. It signs in through a browser with
+> Everything that changes the server is a preview until `--commit` is passed. plextool uses Plex's API and doesn't edit the Plex database file. It signs in through a browser with
 > [`plextool auth`](https://plextool.readthedocs.io/en/latest/commands/auth.html), and works against a server on the same machine, across the
 > internet, or directly with no internet access ([`plextool server`](https://plextool.readthedocs.io/en/latest/commands/server.html)).
 
@@ -152,8 +158,7 @@ $ plextool watched copy --help
 To see what plextool is doing, add `-v` (`--verbose`) to any command. It prints each request sent
 to Plex, with the time, on standard error, followed by a line for the reply: the status, how many
 records were in it (and where that page sits in the whole list), its size and how long it took.
-It also prints when each slow step starts and finishes. The token
-is hidden in that output.
+It also prints when each slow step starts and finishes. (Access tokens are hidden in that output.)
 
 ```console
 $ plextool stale --all-users -v
@@ -177,8 +182,9 @@ Python 3.12. If something doesn't work on another version, please
 version.
 
 `plextool subs` also needs MKVToolNix (`mkvmerge`, `mkvextract`) for MKV files and
-FFmpeg (`ffmpeg`, `ffprobe`) for MP4 files. Only the ones for the file types
-in use are needed.
+FFmpeg (`ffmpeg`, `ffprobe`) for MP4 files. Only the binaries for the file types
+in use are needed, and if none of those tasks needing these are used, the binaries 
+are not needed at all.
 
 [pipx](https://pipx.pypa.io/stable/) is the usual way to install a command line tool written in Python. It gives
 plextool its own environment, so its packages never clash with anything else, and puts the `plextool` command on the PATH:
@@ -241,8 +247,7 @@ and use `python3 -m plextool ...` instead.
 
 ## Connecting
 
-Sign in once. This prints a link (and a QR code, if `segno` is installed) to
-approve in a browser:
+Sign in once. This prints a link (and a QR code, if `segno` is installed) to approve in a browser:
 
 ```console
 $ plextool auth login
@@ -274,5 +279,4 @@ $ pytest
 
 ## Disclaimer
 
-These tools only use the documented plexapi calls, but they do write to the
-server when `--commit` is passed. Check the dry run first. Use is at the user's own risk.
+Initial versions of the scripts that started this were mine, although AI enabled the push to its present state. I test changes against real Plex servers with real users.  Changes that modify the server are previews until `--commit` is passed, so the actions can be checked. Check the dry run first. Use is at the user's own risk.
