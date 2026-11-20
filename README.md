@@ -1,6 +1,6 @@
 # plextool
 
-> [!INFORMATION]
+> [!INFO]
 > Well tested, but still new... please raise an issue if one is found!
 
 Swiss army knife command line tool for Plex library maintenance. Built on [python-plexapi](https://python-plexapi.readthedocs.io/), which talks to the
